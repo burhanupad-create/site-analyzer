@@ -34,7 +34,12 @@ export function UrlInputForm() {
         }),
       });
 
-      const data = await res.json() as { jobId?: string; error?: string };
+      let data: { jobId?: string; error?: string } = {};
+      try {
+        data = await res.json() as { jobId?: string; error?: string };
+      } catch {
+        throw new Error(`Server error (${res.status}) — check Vercel logs`);
+      }
 
       if (!res.ok) {
         throw new Error(data.error || "Failed to start analysis");

@@ -13,6 +13,16 @@ import type { PsiStrategy } from "@/types";
 export const maxDuration = 300;
 
 export async function POST(req: NextRequest) {
+  try {
+    return await handleAnalyze(req);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    console.error("[analyze] Unhandled error:", message);
+    return NextResponse.json({ error: message }, { status: 500 });
+  }
+}
+
+async function handleAnalyze(req: NextRequest) {
   const ip =
     req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "anonymous";
   const { allowed } = await checkRateLimit(ip, ANALYSIS_RATE_LIMIT);
