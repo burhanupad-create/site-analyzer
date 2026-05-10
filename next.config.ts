@@ -1,7 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  serverExternalPackages: ["puppeteer", "xml2js", "cheerio"],
+  serverExternalPackages: ["puppeteer-core", "@sparticuz/chromium-min", "xml2js", "cheerio"],
   turbopack: {
     root: __dirname,
   },
