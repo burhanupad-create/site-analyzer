@@ -34,12 +34,13 @@ export function UrlInputForm() {
         }),
       });
 
+      const data = await res.json() as { jobId?: string; error?: string };
+
       if (!res.ok) {
-        const data = await res.json() as { error?: string };
         throw new Error(data.error || "Failed to start analysis");
       }
 
-      const { jobId } = await res.json() as { jobId: string };
+      const { jobId } = data as { jobId: string };
       router.push(`/analysis/${jobId}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unexpected error");
