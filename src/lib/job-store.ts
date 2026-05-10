@@ -1,13 +1,31 @@
-import { Redis } from "@upstash/redis";
 import type { AnalysisJob, JobStatus, PsiStrategy, SiteReport } from "@/types";
 import crypto from "crypto";
 
-const redis = new Redis({
-  url: process.env.UPSTASH_REDIS_REST_URL!,
-  token: process.env.UPSTASH_REDIS_REST_TOKEN!,
-});
+const TTL = 60 * 60 * 2; // 2 hours in seconds
 
-const TTL = 60 * 60 * 2; // 2 hours
+// ─── Redis client (lazy — only created when env vars are present) ─────────────
+
+let redisClient: import("@upstash/redis").Redis | null = null;
+
+async function getRedis(): Promise<import("@upstash/redis").Redis | null> {
+  const url = process.env.UPSTASH_REDIS_REST_URL;
+  const token = process.env.UPSTASH_REDIS_REST_TOKEN;
+
+  if (!url || !token) {
+    console.warn("[job-store] Redis env vars missing — using in-memory store");
+    return null;
+  }
+
+  if (!redisClient) {
+    const { Redis } = await import("@upstash/redis");
+    redisClient = new Redis({ url, token });
+  }
+  return redisClient;
+}
+
+// ─── In-memory fallback ───────────────────────────────────────────────────────
+
+const memStore = new Map<string, AnalysisJob>();
 
 // ─── CRUD ─────────────────────────────────────────────────────────────────────
 
@@ -22,17 +40,27 @@ export async function createJob(url: string, strategy: PsiStrategy = "mobile"): 
     currentStep: "Queued",
     startedAt: new Date(),
   };
-  await redis.set(`job:${id}`, JSON.stringify(job), { ex: TTL });
+
+  const redis = await getRedis();
+  if (redis) {
+    await redis.set(`job:${id}`, JSON.stringify(job), { ex: TTL });
+  } else {
+    memStore.set(id, job);
+  }
   return job;
 }
 
 export async function getJob(id: string): Promise<AnalysisJob | undefined> {
-  const data = await redis.get<string>(`job:${id}`);
-  if (!data) return undefined;
-  const job = typeof data === "string" ? JSON.parse(data) : data;
-  job.startedAt = new Date(job.startedAt);
-  if (job.completedAt) job.completedAt = new Date(job.completedAt);
-  return job;
+  const redis = await getRedis();
+  if (redis) {
+    const data = await redis.get<string>(`job:${id}`);
+    if (!data) return undefined;
+    const job = typeof data === "string" ? JSON.parse(data) : data;
+    job.startedAt = new Date(job.startedAt);
+    if (job.completedAt) job.completedAt = new Date(job.completedAt);
+    return job;
+  }
+  return memStore.get(id);
 }
 
 export async function updateJob(
@@ -42,7 +70,13 @@ export async function updateJob(
   const job = await getJob(id);
   if (!job) return undefined;
   const updated = { ...job, ...updates };
-  await redis.set(`job:${id}`, JSON.stringify(updated), { ex: TTL });
+
+  const redis = await getRedis();
+  if (redis) {
+    await redis.set(`job:${id}`, JSON.stringify(updated), { ex: TTL });
+  } else {
+    memStore.set(id, updated);
+  }
   return updated;
 }
 
