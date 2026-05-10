@@ -1,6 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-
-export const maxDuration = 300;
 import {
   createJob,
   setJobCompleted,
@@ -12,8 +10,9 @@ import { runFullAnalysis } from "@/services/report.service";
 import { checkRateLimit, ANALYSIS_RATE_LIMIT } from "@/lib/rate-limit";
 import type { PsiStrategy } from "@/types";
 
+export const maxDuration = 300;
+
 export async function POST(req: NextRequest) {
-  // ── Rate limiting (architecture hook — swap InProcessRateLimiter for Upstash) ──
   const ip =
     req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "anonymous";
   const { allowed } = await checkRateLimit(ip, ANALYSIS_RATE_LIMIT);
@@ -45,7 +44,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Invalid URL" }, { status: 400 });
   }
 
-  // Reject private/internal URLs — PSI can't reach them and they'd consume quota
   if (isPrivateUrl(parsedUrl)) {
     return NextResponse.json(
       { error: "URL must be a publicly accessible website (localhost and private IPs are not supported)" },
@@ -54,13 +52,11 @@ export async function POST(req: NextRequest) {
   }
 
   if (!process.env.PSI_API_KEY && !apiKey) {
-    console.warn("[analyze] No PSI_API_KEY set — using anonymous quota (~2 req/min). Add PSI_API_KEY to .env.local to avoid 429 errors.");
+    console.warn("[analyze] No PSI_API_KEY set — using anonymous quota.");
   }
 
-  const job = createJob(parsedUrl.href, strategy);
+  const job = await createJob(parsedUrl.href, strategy);
 
-  // Fire-and-forget background job.
-  // Production upgrade: replace with BullMQ/Inngest job enqueue.
   runJobInBackground(job.id, parsedUrl.href, strategy, apiKey);
 
   return NextResponse.json({ jobId: job.id }, { status: 202 });
@@ -72,7 +68,6 @@ function isPrivateUrl(url: URL): boolean {
   const host = url.hostname.toLowerCase();
   if (host === "localhost" || host === "127.0.0.1" || host === "::1") return true;
   if (host.endsWith(".local") || host.endsWith(".internal") || host.endsWith(".localhost")) return true;
-  // Private IPv4 ranges
   const v4 = host.match(/^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/);
   if (v4) {
     const [, a, b] = v4.map(Number);
@@ -92,14 +87,13 @@ async function runJobInBackground(
   apiKey?: string
 ): Promise<void> {
   try {
-    setJobRunning(jobId, "Discovering sitemap…", 5);
+    await setJobRunning(jobId, "Discovering sitemap…", 5);
 
     const crawlResult = await discoverAndCrawlSitemap(siteUrl);
-
     const { urls, sitemapUrl, truncated, totalRaw, skippedReasons } = crawlResult;
 
     const truncatedNote = truncated ? " (truncated to limit)" : "";
-    setJobRunning(
+    await setJobRunning(
       jobId,
       `Found ${urls.length} URLs in sitemap (${sitemapUrl})${truncatedNote}`,
       15
@@ -113,21 +107,19 @@ async function runJobInBackground(
       skippedReasons,
       truncated,
       totalRaw,
-      onProgress: (completed, total, currentUrl) => {
+      onProgress: async (completed, total, currentUrl) => {
         const psiProgress = total > 0 ? (completed / total) * 80 : 0;
         const progress = Math.min(95, 15 + Math.round(psiProgress));
         let pathname = currentUrl;
-        try {
-          pathname = new URL(currentUrl).pathname;
-        } catch { /* ignore */ }
-        setJobRunning(jobId, `Analyzing ${pathname} (${completed + 1}/${total})`, progress);
+        try { pathname = new URL(currentUrl).pathname; } catch { /* ignore */ }
+        await setJobRunning(jobId, `Analyzing ${pathname} (${completed + 1}/${total})`, progress);
       },
     });
 
-    setJobCompleted(jobId, report);
+    await setJobCompleted(jobId, report);
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     console.error(`[analyze] Job ${jobId} failed:`, message);
-    setJobFailed(jobId, message);
+    await setJobFailed(jobId, message);
   }
 }

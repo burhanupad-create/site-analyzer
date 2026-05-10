@@ -1,23 +1,17 @@
-/**
- * In-memory job store.
- *
- * Production upgrade path:
- *   Replace the Map with a Redis/Upstash adapter — the public interface
- *   (createJob, getJob, updateJob, setJobRunning, setJobCompleted, setJobFailed)
- *   stays identical so no callers need changing.
- *
- * For persistent history (PostgreSQL):
- *   Wrap the same interface with a DB adapter and upsert on each updateJob call.
- */
-
+import { Redis } from "@upstash/redis";
 import type { AnalysisJob, JobStatus, PsiStrategy, SiteReport } from "@/types";
 import crypto from "crypto";
 
-const jobs = new Map<string, AnalysisJob>();
+const redis = new Redis({
+  url: process.env.UPSTASH_REDIS_REST_URL!,
+  token: process.env.UPSTASH_REDIS_REST_TOKEN!,
+});
+
+const TTL = 60 * 60 * 2; // 2 hours
 
 // ─── CRUD ─────────────────────────────────────────────────────────────────────
 
-export function createJob(url: string, strategy: PsiStrategy = "mobile"): AnalysisJob {
+export async function createJob(url: string, strategy: PsiStrategy = "mobile"): Promise<AnalysisJob> {
   const id = crypto.randomUUID();
   const job: AnalysisJob = {
     id,
@@ -28,33 +22,38 @@ export function createJob(url: string, strategy: PsiStrategy = "mobile"): Analys
     currentStep: "Queued",
     startedAt: new Date(),
   };
-  jobs.set(id, job);
+  await redis.set(`job:${id}`, JSON.stringify(job), { ex: TTL });
   return job;
 }
 
-export function getJob(id: string): AnalysisJob | undefined {
-  return jobs.get(id);
+export async function getJob(id: string): Promise<AnalysisJob | undefined> {
+  const data = await redis.get<string>(`job:${id}`);
+  if (!data) return undefined;
+  const job = typeof data === "string" ? JSON.parse(data) : data;
+  job.startedAt = new Date(job.startedAt);
+  if (job.completedAt) job.completedAt = new Date(job.completedAt);
+  return job;
 }
 
-export function updateJob(
+export async function updateJob(
   id: string,
   updates: Partial<Omit<AnalysisJob, "id">>
-): AnalysisJob | undefined {
-  const job = jobs.get(id);
+): Promise<AnalysisJob | undefined> {
+  const job = await getJob(id);
   if (!job) return undefined;
   const updated = { ...job, ...updates };
-  jobs.set(id, updated);
+  await redis.set(`job:${id}`, JSON.stringify(updated), { ex: TTL });
   return updated;
 }
 
 // ─── Convenience Setters ──────────────────────────────────────────────────────
 
-export function setJobRunning(id: string, step: string, progress: number): void {
-  updateJob(id, { status: "running", currentStep: step, progress });
+export async function setJobRunning(id: string, step: string, progress: number): Promise<void> {
+  await updateJob(id, { status: "running", currentStep: step, progress });
 }
 
-export function setJobCompleted(id: string, report: SiteReport): void {
-  updateJob(id, {
+export async function setJobCompleted(id: string, report: SiteReport): Promise<void> {
+  await updateJob(id, {
     status: "completed",
     progress: 100,
     currentStep: "Analysis complete",
@@ -63,8 +62,8 @@ export function setJobCompleted(id: string, report: SiteReport): void {
   });
 }
 
-export function setJobFailed(id: string, error: string): void {
-  updateJob(id, {
+export async function setJobFailed(id: string, error: string): Promise<void> {
+  await updateJob(id, {
     status: "failed",
     currentStep: "Failed",
     error,
@@ -72,26 +71,8 @@ export function setJobFailed(id: string, error: string): void {
   });
 }
 
-// ─── Utilities ────────────────────────────────────────────────────────────────
-
-export function listJobs(): AnalysisJob[] {
-  return Array.from(jobs.values()).sort(
-    (a, b) => b.startedAt.getTime() - a.startedAt.getTime()
-  );
+export async function getJobSnapshot(id: string): Promise<Omit<AnalysisJob, "report"> | AnalysisJob | undefined> {
+  return getJob(id);
 }
 
-/** Remove jobs older than 2 hours to prevent memory leaks */
-export function pruneOldJobs(): void {
-  const cutoff = Date.now() - 2 * 60 * 60 * 1_000;
-  for (const [id, job] of jobs.entries()) {
-    if (job.startedAt.getTime() < cutoff) jobs.delete(id);
-  }
-}
-
-/** Returns a serialisable snapshot — safe to send over SSE/JSON */
-export function getJobSnapshot(id: string): Omit<AnalysisJob, "report"> | AnalysisJob | undefined {
-  return jobs.get(id);
-}
-
-// Type-only re-export so API routes don't need to import types separately
 export type { JobStatus };

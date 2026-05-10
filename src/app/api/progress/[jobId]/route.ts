@@ -26,7 +26,7 @@ export async function GET(
       };
 
       const poll = async () => {
-        const job = getJob(jobId);
+        const job = await getJob(jobId);
 
         if (!job) {
           send({ error: "Job not found" });

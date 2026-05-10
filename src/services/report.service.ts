@@ -38,7 +38,7 @@ export interface AnalysisInput {
   urls: string[];
   strategy: PsiStrategy;
   apiKey?: string;
-  onProgress?: (completed: number, total: number, currentUrl: string) => void;
+  onProgress?: (completed: number, total: number, currentUrl: string) => void | Promise<void>;
   /** Skipped URLs from sitemap crawl — included in metadata */
   skippedReasons?: SkipReason[];
   truncated?: boolean;
