@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, after } from "next/server";
 import {
   createJob,
   setJobCompleted,
@@ -57,7 +57,8 @@ export async function POST(req: NextRequest) {
 
   const job = await createJob(parsedUrl.href, strategy);
 
-  runJobInBackground(job.id, parsedUrl.href, strategy, apiKey);
+  // after() tells Vercel to keep running this after the 202 response is sent
+  after(() => runJobInBackground(job.id, parsedUrl.href, strategy, apiKey));
 
   return NextResponse.json({ jobId: job.id }, { status: 202 });
 }
