@@ -42,47 +42,57 @@ export function AnalysisDashboard({ jobId, isPrint }: AnalysisDashboardProps) {
   const [downloadingCsv, setDownloadingCsv] = useState(false);
 
   useEffect(() => {
-    let es: EventSource | null = null;
+    let stopped = false;
 
-    function connect() {
-      es = new EventSource(`/api/progress/${jobId}`);
+    async function poll() {
+      while (!stopped) {
+        try {
+          const res = await fetch(`/api/progress/${jobId}`);
+          if (!res.ok) {
+            await new Promise((r) => setTimeout(r, 3000));
+            continue;
+          }
+          const data = await res.json() as ProgressEvent & { error?: string };
 
-      es.onmessage = (e: MessageEvent<string>) => {
-        const data = JSON.parse(e.data) as ProgressEvent & { error?: string };
+          if (data.error) {
+            setProgress((prev) => ({
+              ...prev,
+              status: "failed",
+              currentStep: data.error ?? "Unknown error",
+            }));
+            return;
+          }
 
-        if (data.error) {
-          setProgress((prev) => ({
-            ...prev,
-            status: "failed",
-            currentStep: data.error ?? "Unknown error",
-          }));
-          es?.close();
-          return;
+          setProgress(data);
+
+          if (data.status === "completed") {
+            await fetchReport();
+            return;
+          }
+
+          if (data.status === "failed") return;
+        } catch {
+          // network blip — keep polling
         }
 
-        setProgress(data);
-
-        if (data.status === "completed") {
-          es?.close();
-          void fetchReport();
-        } else if (data.status === "failed") {
-          es?.close();
-        }
-      };
-
-      es.onerror = () => es?.close();
-    }
-
-    async function fetchReport() {
-      const res = await fetch(`/api/report/${jobId}`);
-      if (res.ok) {
-        const data = await res.json() as SiteReport;
-        setReport(data);
+        await new Promise((r) => setTimeout(r, 2000));
       }
     }
 
-    connect();
-    return () => es?.close();
+    async function fetchReport() {
+      try {
+        const res = await fetch(`/api/report/${jobId}`);
+        if (res.ok) {
+          const data = await res.json() as SiteReport;
+          setReport(data);
+        }
+      } catch {
+        // ignore
+      }
+    }
+
+    void poll();
+    return () => { stopped = true; };
   }, [jobId]);
 
   async function downloadPdf() {
