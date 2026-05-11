@@ -1,6 +1,6 @@
 // ─── Core Job Types ────────────────────────────────────────────────────────────
 
-export type JobStatus = "pending" | "selecting" | "running" | "completed" | "failed";
+export type JobStatus = "pending" | "running" | "completed" | "failed";
 export type PsiStrategy = "mobile" | "desktop";
 
 export interface AnalysisJob {
@@ -14,12 +14,6 @@ export interface AnalysisJob {
   completedAt?: Date;
   error?: string;
   report?: SiteReport;
-  discoveredUrls?: string[];
-  skippedReasons?: SkipReason[];
-  truncated?: boolean;
-  totalRaw?: number;
-  sitemapUrl?: string;
-  apiKey?: string;
 }
 
 // ─── Report ────────────────────────────────────────────────────────────────────
