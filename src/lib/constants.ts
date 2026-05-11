@@ -92,7 +92,7 @@ export const MAX_TOTAL_URLS = 100;
 export const MAX_GROUPS = 20;
 
 /** Maximum pages sampled per folder group for PSI analysis */
-export const MAX_PAGES_PER_GROUP = 3;
+export const MAX_PAGES_PER_GROUP = 5;
 
 // ─── PSI Configuration ────────────────────────────────────────────────────────
 
@@ -107,14 +107,7 @@ export const PSI_CATEGORIES = [
 export const DEFAULT_PSI_STRATEGY = "mobile" as const;
 
 /** Concurrent PSI requests in flight at once (quota-friendly) */
-export const PSI_CONCURRENCY = 8;
-
-/**
- * Hard wall-clock budget for the entire PSI analysis phase (ms).
- * Leaves ~60s headroom before Vercel's 300s maxDuration so
- * setJobCompleted always has time to write to Redis.
- */
-export const ANALYSIS_BUDGET_MS = 230_000;
+export const PSI_CONCURRENCY = 5;
 
 // ─── Timeouts ────────────────────────────────────────────────────────────────
 

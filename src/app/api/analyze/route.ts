@@ -123,7 +123,7 @@ async function runJobInBackground(
         const progress = Math.min(95, 15 + Math.round(psiProgress));
         let pathname = currentUrl;
         try { pathname = new URL(currentUrl).pathname; } catch { /* ignore */ }
-        await setJobRunning(jobId, `Analyzing ${pathname} (${Math.min(completed + 1, total)}/${total})`, progress);
+        await setJobRunning(jobId, `Analyzing ${pathname} (${completed + 1}/${total})`, progress);
       },
     });
 
