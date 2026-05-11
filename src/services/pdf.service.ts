@@ -1,5 +1,34 @@
-import puppeteer from "puppeteer";
+import puppeteer from "puppeteer-core";
+import chromium from "@sparticuz/chromium-min";
 import { PDF_TIMEOUT_MS } from "@/lib/constants";
+
+const CHROMIUM_REMOTE_URL =
+  "https://github.com/Sparticuz/chromium/releases/download/v133.0.0/chromium-v133.0.0-pack.tar";
+
+async function launchBrowser() {
+  const isVercel = !!process.env.VERCEL;
+  if (isVercel) {
+    const executablePath = await chromium.executablePath(CHROMIUM_REMOTE_URL);
+    return puppeteer.launch({
+      args: chromium.args,
+      executablePath,
+      headless: true,
+    });
+  }
+  // Local dev — use system Chrome
+  const { execSync } = await import("child_process");
+  let executablePath =
+    process.env.PUPPETEER_EXECUTABLE_PATH ||
+    "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
+  try { execSync(`test -f "${executablePath}"`); } catch {
+    executablePath = "/usr/bin/google-chrome";
+  }
+  return puppeteer.launch({
+    executablePath,
+    headless: true,
+    args: ["--no-sandbox", "--disable-setuid-sandbox", "--disable-dev-shm-usage", "--disable-gpu"],
+  });
+}
 
 // ─── PDF Generation ────────────────────────────────────────────────────────────
 
@@ -9,15 +38,7 @@ export async function generatePdfReport(
 ): Promise<Buffer> {
   const reportUrl = `${baseUrl}/analysis/${jobId}?print=1`;
 
-  const browser = await puppeteer.launch({
-    headless: true,
-    args: [
-      "--no-sandbox",
-      "--disable-setuid-sandbox",
-      "--disable-dev-shm-usage",
-      "--disable-gpu",
-    ],
-  });
+  const browser = await launchBrowser();
 
   try {
     const page = await browser.newPage();
@@ -56,21 +77,10 @@ export async function generatePdfReport(
 
 // ─── Homepage Screenshot ───────────────────────────────────────────────────────
 
-/**
- * Captures a compressed JPEG screenshot of the homepage.
- * Returns a base64-encoded string suitable for embedding in an <img> tag.
- *
- * The screenshot is compressed to keep the PDF reasonably sized:
- * - Quality: 70 (JPEG)
- * - Viewport: 1280×800 (standard desktop above the fold)
- */
 export async function captureHomepageScreenshot(
   homepageUrl: string
 ): Promise<string | null> {
-  const browser = await puppeteer.launch({
-    headless: true,
-    args: ["--no-sandbox", "--disable-setuid-sandbox", "--disable-dev-shm-usage"],
-  });
+  const browser = await launchBrowser();
 
   try {
     const page = await browser.newPage();
