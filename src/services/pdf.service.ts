@@ -1,34 +1,5 @@
-import puppeteer from "puppeteer-core";
-import chromium from "@sparticuz/chromium-min";
+import puppeteer from "puppeteer";
 import { PDF_TIMEOUT_MS } from "@/lib/constants";
-
-const CHROMIUM_REMOTE_URL =
-  "https://github.com/Sparticuz/chromium/releases/download/v133.0.0/chromium-v133.0.0-pack.tar";
-
-async function launchBrowser() {
-  const isVercel = !!process.env.VERCEL;
-  if (isVercel) {
-    const executablePath = await chromium.executablePath(CHROMIUM_REMOTE_URL);
-    return puppeteer.launch({
-      args: chromium.args,
-      executablePath,
-      headless: true,
-    });
-  }
-  // Local dev — use system Chrome
-  const { execSync } = await import("child_process");
-  let executablePath =
-    process.env.PUPPETEER_EXECUTABLE_PATH ||
-    "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
-  try { execSync(`test -f "${executablePath}"`); } catch {
-    executablePath = "/usr/bin/google-chrome";
-  }
-  return puppeteer.launch({
-    executablePath,
-    headless: true,
-    args: ["--no-sandbox", "--disable-setuid-sandbox", "--disable-dev-shm-usage", "--disable-gpu"],
-  });
-}
 
 // ─── PDF Generation ────────────────────────────────────────────────────────────
 
@@ -38,7 +9,15 @@ export async function generatePdfReport(
 ): Promise<Buffer> {
   const reportUrl = `${baseUrl}/analysis/${jobId}?print=1`;
 
-  const browser = await launchBrowser();
+  const browser = await puppeteer.launch({
+    headless: true,
+    args: [
+      "--no-sandbox",
+      "--disable-setuid-sandbox",
+      "--disable-dev-shm-usage",
+      "--disable-gpu",
+    ],
+  });
 
   try {
     const page = await browser.newPage();
@@ -54,20 +33,19 @@ export async function generatePdfReport(
       .waitForSelector("[data-report-ready]", { timeout: 20_000 })
       .catch(() => {});
 
+    // Force dark background on the PDF page itself (covers margin areas)
+    await page.addStyleTag({
+      content: `
+        @page { background: #0f1518; }
+        html, body { background: #0f1518 !important; }
+      `,
+    });
+
     const pdfBuffer = await page.pdf({
       format: "A4",
       printBackground: true,
       margin: { top: "14mm", bottom: "14mm", left: "12mm", right: "12mm" },
-      // displayHeaderFooter adds page numbers and domain at bottom
-      displayHeaderFooter: true,
-      headerTemplate: `<div style="font-size:9px;color:#999;width:100%;text-align:center;padding-top:4px;">
-        Site Performance Report
-      </div>`,
-      footerTemplate: `<div style="font-size:9px;color:#999;width:100%;display:flex;justify-content:space-between;padding:0 12mm 0 12mm;box-sizing:border-box;">
-        <span class="url"></span>
-        <span>Page <span class="pageNumber"></span> of <span class="totalPages"></span></span>
-        <span class="date"></span>
-      </div>`,
+      displayHeaderFooter: false,
     });
 
     return Buffer.from(pdfBuffer);
@@ -89,7 +67,10 @@ export async function generatePdfReport(
 export async function captureHomepageScreenshot(
   homepageUrl: string
 ): Promise<string | null> {
-  const browser = await launchBrowser();
+  const browser = await puppeteer.launch({
+    headless: true,
+    args: ["--no-sandbox", "--disable-setuid-sandbox", "--disable-dev-shm-usage"],
+  });
 
   try {
     const page = await browser.newPage();
