@@ -47,16 +47,16 @@ export function SummaryStats({ report }: SummaryStatsProps) {
     {(hasQuotaErrors || (!hasApiKey && failedPages > 0)) && (
       <div className={cn(
         "flex items-start gap-3 rounded-lg border p-4 text-sm",
-        "bg-red-500/10 border-red-500/25 text-red-400"
+        "bg-red-50 border-red-200 text-red-800"
       )}>
-        <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5 text-red-400" />
+        <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5 text-red-500" />
         <div className="space-y-1">
           <p className="font-semibold">
             {hasQuotaErrors
               ? "API quota exceeded — scores may be missing"
               : `${failedPages} page${failedPages !== 1 ? "s" : ""} failed to analyze`}
           </p>
-          <p className="text-red-400/80 text-xs">
+          <p className="text-red-700 text-xs">
             {hasQuotaErrors
               ? "The Google PageSpeed Insights API returned rate-limit errors. The anonymous quota is ~2 requests/min. Add a "
               : "Some pages could not be analyzed. Adding a "}
@@ -69,7 +69,7 @@ export function SummaryStats({ report }: SummaryStatsProps) {
               PSI API key
             </a>
             {" to your "}
-            <code className="font-mono bg-red-500/15 px-1 rounded">.env.local</code>
+            <code className="font-mono bg-red-100 px-1 rounded">.env.local</code>
             {" raises the limit to ~240 req/min."}
           </p>
         </div>
@@ -182,7 +182,7 @@ export function SummaryStats({ report }: SummaryStatsProps) {
           {metadata?.truncated && (
             <div className={cn(
               "mt-3 flex items-start gap-2 text-xs p-2.5 rounded-lg",
-              "bg-amber-500/10 border border-amber-500/25 text-amber-400"
+              "bg-amber-50 border border-amber-200 text-amber-700"
             )}>
               <AlertTriangle className="h-3.5 w-3.5 shrink-0 mt-0.5" />
               <span>

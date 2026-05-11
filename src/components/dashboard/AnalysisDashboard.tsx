@@ -42,47 +42,57 @@ export function AnalysisDashboard({ jobId, isPrint }: AnalysisDashboardProps) {
   const [downloadingCsv, setDownloadingCsv] = useState(false);
 
   useEffect(() => {
-    let es: EventSource | null = null;
+    let stopped = false;
 
-    function connect() {
-      es = new EventSource(`/api/progress/${jobId}`);
+    async function poll() {
+      while (!stopped) {
+        try {
+          const res = await fetch(`/api/progress/${jobId}`);
+          if (!res.ok) {
+            await new Promise((r) => setTimeout(r, 3000));
+            continue;
+          }
+          const data = await res.json() as ProgressEvent & { error?: string };
 
-      es.onmessage = (e: MessageEvent<string>) => {
-        const data = JSON.parse(e.data) as ProgressEvent & { error?: string };
+          if (data.error) {
+            setProgress((prev) => ({
+              ...prev,
+              status: "failed",
+              currentStep: data.error ?? "Unknown error",
+            }));
+            return;
+          }
 
-        if (data.error) {
-          setProgress((prev) => ({
-            ...prev,
-            status: "failed",
-            currentStep: data.error ?? "Unknown error",
-          }));
-          es?.close();
-          return;
+          setProgress(data);
+
+          if (data.status === "completed") {
+            await fetchReport();
+            return;
+          }
+
+          if (data.status === "failed") return;
+        } catch {
+          // network blip — keep polling
         }
 
-        setProgress(data);
-
-        if (data.status === "completed") {
-          es?.close();
-          void fetchReport();
-        } else if (data.status === "failed") {
-          es?.close();
-        }
-      };
-
-      es.onerror = () => es?.close();
-    }
-
-    async function fetchReport() {
-      const res = await fetch(`/api/report/${jobId}`);
-      if (res.ok) {
-        const data = await res.json() as SiteReport;
-        setReport(data);
+        await new Promise((r) => setTimeout(r, 2000));
       }
     }
 
-    connect();
-    return () => es?.close();
+    async function fetchReport() {
+      try {
+        const res = await fetch(`/api/report/${jobId}`);
+        if (res.ok) {
+          const data = await res.json() as SiteReport;
+          setReport(data);
+        }
+      } catch {
+        // ignore
+      }
+    }
+
+    void poll();
+    return () => { stopped = true; };
   }, [jobId]);
 
   async function downloadPdf() {
@@ -131,9 +141,9 @@ export function AnalysisDashboard({ jobId, isPrint }: AnalysisDashboardProps) {
     const grade = categoryScoresToGrade(avg);
 
     return (
-      <div className="print-report bg-[#0f1518]" data-report-ready>
+      <div className="print-report bg-white" data-report-ready>
         {/* Cover / header */}
-        <div className="mb-8 pb-6 border-b border-[#283b43]">
+        <div className="mb-8 pb-6 border-b">
           <h1 className="text-2xl font-bold mb-1">Site Performance Report</h1>
           <p className="text-muted-foreground text-sm">{report.siteUrl}</p>
           <div className="flex flex-wrap gap-3 mt-3 text-xs text-muted-foreground">
@@ -173,7 +183,7 @@ export function AnalysisDashboard({ jobId, isPrint }: AnalysisDashboardProps) {
           <h2 className="text-lg font-semibold mb-4">Section Scores</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {report.folders.map((folder) => (
-              <FolderScoreCard key={folder.folder} folder={folder} isPrint />
+              <FolderScoreCard key={folder.folder} folder={folder} isPrint totalFolders={report.folders.length} />
             ))}
           </div>
         </div>
@@ -263,21 +273,21 @@ export function AnalysisDashboard({ jobId, isPrint }: AnalysisDashboardProps) {
         {/* Action buttons */}
         <div className="flex gap-2 flex-wrap">
           <Link href="/">
-            <Button variant="outline" className="px-6">
+            <Button variant="outline" size="sm">
               <RefreshCw className="h-3.5 w-3.5 mr-1.5" />
               New analysis
             </Button>
           </Link>
           <Button
             variant="outline"
+            size="sm"
             onClick={downloadCsv}
             disabled={downloadingCsv}
-            className="px-6"
           >
             <FileText className="h-3.5 w-3.5 mr-1.5" />
             {downloadingCsv ? "Exporting…" : "CSV"}
           </Button>
-          <Button onClick={downloadPdf} disabled={downloadingPdf} className="px-6">
+          <Button onClick={downloadPdf} disabled={downloadingPdf} size="sm">
             <Download className="h-3.5 w-3.5 mr-1.5" />
             {downloadingPdf ? "Generating PDF…" : "Download PDF"}
           </Button>
@@ -290,21 +300,21 @@ export function AnalysisDashboard({ jobId, isPrint }: AnalysisDashboardProps) {
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="sections">
             Pages
-            <span className="ml-0.5 text-xs bg-muted rounded-full px-1.5 py-0.5">
+            <span className="ml-1.5 text-xs bg-muted rounded-full px-1.5 py-0.5">
               {report.folders.length}
             </span>
           </TabsTrigger>
           <TabsTrigger value="top-issues">
             Top Issues
             {report.topIssues.length > 0 && (
-              <span className="ml-0.5 text-xs bg-muted rounded-full px-1.5 py-0.5">
+              <span className="ml-1.5 text-xs bg-muted rounded-full px-1.5 py-0.5">
                 {report.topIssues.length}
               </span>
             )}
           </TabsTrigger>
           <TabsTrigger value="recommendations">
             Recommendations
-            <span className="ml-0.5 text-xs bg-muted rounded-full px-1.5 py-0.5">
+            <span className="ml-1.5 text-xs bg-muted rounded-full px-1.5 py-0.5">
               {report.recommendations.length}
             </span>
           </TabsTrigger>
@@ -318,21 +328,21 @@ export function AnalysisDashboard({ jobId, isPrint }: AnalysisDashboardProps) {
           )}
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
             {report.folders.slice(0, 6).map((folder) => (
-              <FolderScoreCard key={folder.folder} folder={folder} />
+              <FolderScoreCard key={folder.folder} folder={folder} totalFolders={report.folders.length} />
             ))}
           </div>
           {report.folders.length > 6 && (
             <p className="text-sm text-muted-foreground text-center">
-              +{report.folders.length - 6} more sections — see the Sections tab
+              +{report.folders.length - 6} more pages — see the Pages tab
             </p>
           )}
         </TabsContent>
 
-        {/* All sections */}
+        {/* All pages */}
         <TabsContent value="sections" className="pt-4">
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
             {report.folders.map((folder) => (
-              <FolderScoreCard key={folder.folder} folder={folder} />
+              <FolderScoreCard key={folder.folder} folder={folder} totalFolders={report.folders.length} />
             ))}
           </div>
         </TabsContent>

@@ -15,15 +15,15 @@ function formatMs(ms: number): string {
 }
 
 function severityColor(avgMs: number): string {
-  if (avgMs >= 1000) return "text-red-400";
-  if (avgMs >= 500) return "text-amber-400";
-  return "text-blue-400";
+  if (avgMs >= 1000) return "text-red-500";
+  if (avgMs >= 500) return "text-amber-500";
+  return "text-blue-500";
 }
 
 function severityBg(avgMs: number): string {
-  if (avgMs >= 1000) return "bg-red-500/10 border-red-500/25";
-  if (avgMs >= 500) return "bg-amber-500/10 border-amber-500/25";
-  return "bg-blue-500/10 border-blue-500/25";
+  if (avgMs >= 1000) return "bg-red-50 border-red-200";
+  if (avgMs >= 500) return "bg-amber-50 border-amber-200";
+  return "bg-blue-50 border-blue-200";
 }
 
 function severityLabel(avgMs: number): string {

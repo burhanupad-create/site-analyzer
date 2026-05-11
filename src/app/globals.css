@@ -49,80 +49,77 @@
 }
 
 :root {
-  /* ── Brand: Thunderclap ───────────────────────────────── */
-  --background: #e7f6ea;           /* Roaring Green (pale) */
-  --foreground: #0f1518;           /* Storm */
-  --card: #f2fbf4;
-  --card-foreground: #0f1518;
-  --popover: #f2fbf4;
-  --popover-foreground: #0f1518;
-  --primary: #135545;              /* Deep Green — button fill */
-  --primary-foreground: #d0edd6;   /* Roaring Green Shade 2 — button text */
-  --secondary: #abe5b1;            /* Roaring Green */
-  --secondary-foreground: #0f1518;
-  --muted: #d0edd6;                /* Roaring Green Shade 2 */
-  --muted-foreground: #283b43;     /* Storm Light */
-  --accent: #e0b642;               /* Gold */
-  --accent-foreground: #0f1518;
-  --destructive: #e94a3b;          /* Brand Red */
-  --border: #90c0a6;               /* Sage Green */
-  --input: #d0edd6;
-  --ring: #135545;
-  --chart-1: #abe5b1;
-  --chart-2: #90c0a6;
-  --chart-3: #135545;
-  --chart-4: #e0b642;
-  --chart-5: #283b43;
-  --radius: 2px;                   /* Brand: sharp corners */
-  --sidebar: #e7f6ea;
-  --sidebar-foreground: #0f1518;
-  --sidebar-primary: #135545;
-  --sidebar-primary-foreground: #d0edd6;
-  --sidebar-accent: #abe5b1;
-  --sidebar-accent-foreground: #0f1518;
-  --sidebar-border: #90c0a6;
-  --sidebar-ring: #135545;
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.145 0 0);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.145 0 0);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.145 0 0);
+  --primary: oklch(0.205 0 0);
+  --primary-foreground: oklch(0.985 0 0);
+  --secondary: oklch(0.97 0 0);
+  --secondary-foreground: oklch(0.205 0 0);
+  --muted: oklch(0.97 0 0);
+  --muted-foreground: oklch(0.556 0 0);
+  --accent: oklch(0.97 0 0);
+  --accent-foreground: oklch(0.205 0 0);
+  --destructive: oklch(0.577 0.245 27.325);
+  --border: oklch(0.922 0 0);
+  --input: oklch(0.922 0 0);
+  --ring: oklch(0.708 0 0);
+  --chart-1: oklch(0.87 0 0);
+  --chart-2: oklch(0.556 0 0);
+  --chart-3: oklch(0.439 0 0);
+  --chart-4: oklch(0.371 0 0);
+  --chart-5: oklch(0.269 0 0);
+  --radius: 0.625rem;
+  --sidebar: oklch(0.985 0 0);
+  --sidebar-foreground: oklch(0.145 0 0);
+  --sidebar-primary: oklch(0.205 0 0);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.97 0 0);
+  --sidebar-accent-foreground: oklch(0.205 0 0);
+  --sidebar-border: oklch(0.922 0 0);
+  --sidebar-ring: oklch(0.708 0 0);
 }
 
 .dark {
-  --background: #0f1518;
-  --foreground: #e7f6ea;
-  --card: #1a2327;
-  --card-foreground: #e7f6ea;
-  --popover: #1a2327;
-  --popover-foreground: #e7f6ea;
-  --primary: #abe5b1;
-  --primary-foreground: #0f1518;
-  --secondary: #283b43;
-  --secondary-foreground: #e7f6ea;
-  --muted: #283b43;
-  --muted-foreground: #90c0a6;
-  --accent: #e0b642;
-  --accent-foreground: #0f1518;
-  --destructive: #e94a3b;
-  --border: #283b43;
-  --input: #283b43;
-  --ring: #abe5b1;
-  --chart-1: #abe5b1;
-  --chart-2: #90c0a6;
-  --chart-3: #d0edd6;
-  --chart-4: #e0b642;
-  --chart-5: #283b43;
-  --sidebar: #1a2327;
-  --sidebar-foreground: #e7f6ea;
-  --sidebar-primary: #abe5b1;
-  --sidebar-primary-foreground: #0f1518;
-  --sidebar-accent: #283b43;
-  --sidebar-accent-foreground: #e7f6ea;
-  --sidebar-border: #283b43;
-  --sidebar-ring: #abe5b1;
+  --background: oklch(0.145 0 0);
+  --foreground: oklch(0.985 0 0);
+  --card: oklch(0.205 0 0);
+  --card-foreground: oklch(0.985 0 0);
+  --popover: oklch(0.205 0 0);
+  --popover-foreground: oklch(0.985 0 0);
+  --primary: oklch(0.922 0 0);
+  --primary-foreground: oklch(0.205 0 0);
+  --secondary: oklch(0.269 0 0);
+  --secondary-foreground: oklch(0.985 0 0);
+  --muted: oklch(0.269 0 0);
+  --muted-foreground: oklch(0.708 0 0);
+  --accent: oklch(0.269 0 0);
+  --accent-foreground: oklch(0.985 0 0);
+  --destructive: oklch(0.704 0.191 22.216);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.556 0 0);
+  --chart-1: oklch(0.87 0 0);
+  --chart-2: oklch(0.556 0 0);
+  --chart-3: oklch(0.439 0 0);
+  --chart-4: oklch(0.371 0 0);
+  --chart-5: oklch(0.269 0 0);
+  --sidebar: oklch(0.205 0 0);
+  --sidebar-foreground: oklch(0.985 0 0);
+  --sidebar-primary: oklch(0.488 0.243 264.376);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.269 0 0);
+  --sidebar-accent-foreground: oklch(0.985 0 0);
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: oklch(0.556 0 0);
 }
 
 @layer base {
   * {
     @apply border-border outline-ring/50;
-    -webkit-print-color-adjust: exact;
-    print-color-adjust: exact;
   }
   body {
     @apply bg-background text-foreground;
@@ -130,34 +127,6 @@
   html {
     @apply font-sans;
   }
-}
-
-/* ── Brand tile / grid patterns (Thunderclap styleguide) ─────────────────── */
-
-/* Dense mosaic — used for accent strips */
-.brand-pattern {
-  background-color: #135545;
-  background-image:
-    repeating-linear-gradient(0deg,  transparent, transparent 35px, #abe5b120 35px, #abe5b120 36px),
-    repeating-linear-gradient(90deg, transparent, transparent 35px, #abe5b120 35px, #abe5b120 36px);
-  background-size: 36px 36px;
-}
-
-/* Subtle dot-grid — dark bg with faint green lines */
-.brand-grid {
-  background-color: var(--background);
-  background-image:
-    repeating-linear-gradient(0deg,  transparent, transparent 47px, #abe5b112 47px, #abe5b112 48px),
-    repeating-linear-gradient(90deg, transparent, transparent 47px, #abe5b112 47px, #abe5b112 48px);
-  background-size: 48px 48px;
-}
-
-/* Crosshatch — tighter, used inside cards / sections */
-.brand-crosshatch {
-  background-image:
-    repeating-linear-gradient(0deg,  transparent, transparent 23px, #abe5b10e 23px, #abe5b10e 24px),
-    repeating-linear-gradient(90deg, transparent, transparent 23px, #abe5b10e 23px, #abe5b10e 24px);
-  background-size: 24px 24px;
 }
 
 /* ── Print / PDF mode ─────────────────────────────────────────────────────── */
@@ -180,13 +149,11 @@
     display: none !important;
   }
 
-  /* Preserve dark brand theme */
+  /* Force clean backgrounds */
   body,
   .print-report {
-    background: #0f1518 !important;
-    color: #e7f6ea !important;
-    -webkit-print-color-adjust: exact !important;
-    print-color-adjust: exact !important;
+    background: white !important;
+    color: black !important;
   }
 
   /* Prevent cards splitting across pages */
