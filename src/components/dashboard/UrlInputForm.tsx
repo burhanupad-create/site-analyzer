@@ -34,19 +34,13 @@ export function UrlInputForm() {
         }),
       });
 
-      let data: { jobId?: string; error?: string } = {};
-      try {
-        data = await res.json() as { jobId?: string; error?: string };
-      } catch {
-        throw new Error(`Server error (${res.status}) — check Vercel logs`);
-      }
-
       if (!res.ok) {
+        const data = await res.json() as { error?: string };
         throw new Error(data.error || "Failed to start analysis");
       }
 
-      const { jobId } = data as { jobId: string };
-      router.push(`/analysis/${jobId}`);
+      const { jobId } = await res.json() as { jobId: string };
+      router.push(`/analysis/${jobId}/select`);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unexpected error");
       setLoading(false);
@@ -78,7 +72,7 @@ export function UrlInputForm() {
           {loading ? (
             <>
               <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-              Starting…
+              Discovering pages…
             </>
           ) : (
             "Analyze"
