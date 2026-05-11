@@ -16,6 +16,7 @@ import {
 } from "@/types";
 import { classifyPsiError } from "./psi.service";
 import {
+  ANALYSIS_BUDGET_MS,
   MAX_GROUPS,
   MAX_PAGES_PER_GROUP,
   PSI_CONCURRENCY,
@@ -393,6 +394,7 @@ export async function runFullAnalysis(input: AnalysisInput): Promise<SiteReport>
   const totalRequests = toAnalyze.reduce((sum, f) => sum + f.urls.length, 0);
   let completedRequests = 0;
   let cacheHits = 0;
+  const analysisStart = Date.now();
 
   // ── Concurrent PSI requests with p-limit ───────────────────────────────────
   const limit = pLimit(PSI_CONCURRENCY);
@@ -415,7 +417,20 @@ export async function runFullAnalysis(input: AnalysisInput): Promise<SiteReport>
       limit(async () => {
         onProgress?.(completedRequests, totalRequests, url);
 
-        const score = await analyzePageWithPsi(url, strategy, apiKey);
+        let score: PageScore;
+        if (Date.now() - analysisStart > ANALYSIS_BUDGET_MS) {
+          // Time budget exhausted — record as skipped so the job can still complete
+          console.warn(`[report] Budget exceeded, skipping PSI for ${url}`);
+          score = { url, performance: 0, accessibility: 0, bestPractices: 0, seo: 0, error: "Analysis time limit reached" };
+        } else {
+          score = await analyzePageWithPsi(url, strategy, apiKey);
+          // Keep only top 5 opportunities by savings to limit Redis payload size
+          if (score.opportunities && score.opportunities.length > 5) {
+            score.opportunities = score.opportunities
+              .sort((a, b) => b.savingsMs - a.savingsMs)
+              .slice(0, 5);
+          }
+        }
 
         if (score.fromCache) cacheHits++;
         if ((folder === "/" || normalizeUrlLocal(url) === normalizeUrlLocal(homepageUrl)) && !homepageScore) {
