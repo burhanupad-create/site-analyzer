@@ -46,7 +46,7 @@ export function UrlInputForm() {
       }
 
       const { jobId } = data as { jobId: string };
-      router.push(`/analysis/${jobId}`);
+      router.push(`/analysis/${jobId}/select`);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unexpected error");
       setLoading(false);
@@ -78,7 +78,7 @@ export function UrlInputForm() {
           {loading ? (
             <>
               <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-              Starting…
+              Discovering pages…
             </>
           ) : (
             "Analyze"

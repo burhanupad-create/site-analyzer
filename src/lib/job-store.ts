@@ -1,4 +1,4 @@
-import type { AnalysisJob, JobStatus, PsiStrategy, SiteReport } from "@/types";
+import type { AnalysisJob, JobStatus, PsiStrategy, SkipReason, SiteReport } from "@/types";
 import crypto from "crypto";
 
 const TTL = 60 * 60 * 2; // 2 hours in seconds
@@ -105,6 +105,24 @@ export async function setJobFailed(id: string, error: string): Promise<void> {
   });
 }
 
+
+export async function setJobSelecting(
+  id: string,
+  opts: {
+    discoveredUrls: string[];
+    skippedReasons: SkipReason[];
+    truncated: boolean;
+    totalRaw: number;
+    sitemapUrl: string;
+    apiKey?: string;
+  }
+): Promise<void> {
+  await updateJob(id, {
+    status: "selecting",
+    currentStep: `Found ${opts.discoveredUrls.length} pages — select which to analyze`,
+    ...opts,
+  });
+}
 
 export async function getJobSnapshot(id: string): Promise<Omit<AnalysisJob, "report"> | AnalysisJob | undefined> {
   return getJob(id);
