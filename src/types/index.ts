@@ -1,6 +1,6 @@
 // ─── Core Job Types ────────────────────────────────────────────────────────────
 
-export type JobStatus = "pending" | "running" | "completed" | "failed";
+export type JobStatus = "pending" | "selecting" | "running" | "completed" | "failed";
 export type PsiStrategy = "mobile" | "desktop";
 
 export interface AnalysisJob {
@@ -14,6 +14,13 @@ export interface AnalysisJob {
   completedAt?: Date;
   error?: string;
   report?: SiteReport;
+  // Populated after sitemap crawl, before PSI analysis starts
+  discoveredUrls?: string[];
+  skippedReasons?: SkipReason[];
+  truncated?: boolean;
+  totalRaw?: number;
+  sitemapUrl?: string;
+  apiKey?: string;
 }
 
 // ─── Report ────────────────────────────────────────────────────────────────────
@@ -41,7 +48,7 @@ export interface ReportMetadata {
   psiErrors: PsiPageError[];
   skippedUrls: number;
   skippedReasons: SkipReason[];
-  excludedPatternMatches: Array<{ url: string; pattern: string }>;
+  excludedPatternMatches?: { url: string; pattern: string }[];
   strategy: PsiStrategy;
   generatedAt: string;
   durationMs: number;

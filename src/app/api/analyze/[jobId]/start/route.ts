@@ -15,7 +15,7 @@ export async function POST(
   { params }: { params: Promise<{ jobId: string }> }
 ) {
   const { jobId } = await params;
-  const job = getJob(jobId);
+  const job = await getJob(jobId);
 
   if (!job || job.status !== "selecting") {
     return NextResponse.json(
@@ -34,7 +34,7 @@ export async function POST(
   const { strategy, url: siteUrl, skippedReasons, truncated, totalRaw, apiKey } = job;
 
   // Clear the stored apiKey now that we've read it
-  updateJob(jobId, { apiKey: undefined });
+  void updateJob(jobId, { apiKey: undefined });
 
   // Fire-and-forget — works fine on localhost (long-running Node process)
   void runPsiInBackground({
@@ -66,7 +66,7 @@ async function runPsiInBackground(opts: {
   const { jobId, siteUrl, selectedUrls, strategy, apiKey, skippedReasons, truncated, totalRaw } = opts;
 
   try {
-    setJobRunning(jobId, `Starting analysis of ${selectedUrls.length} pages…`, 10);
+    void setJobRunning(jobId, `Starting analysis of ${selectedUrls.length} pages…`, 10);
 
     const report = await runFullAnalysis({
       siteUrl,
