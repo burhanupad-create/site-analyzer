@@ -34,17 +34,17 @@ export function categoryScoresToGrade(scores: CategoryScores): PerformanceGrade 
 // ─── Grade Display Helpers ────────────────────────────────────────────────────
 
 export const GRADE_COLORS: Record<PerformanceGrade, string> = {
-  A: "text-emerald-600",
-  B: "text-green-500",
-  C: "text-amber-500",
-  D: "text-red-500",
+  A: "text-emerald-400",
+  B: "text-green-400",
+  C: "text-amber-400",
+  D: "text-red-400",
 };
 
 export const GRADE_BG_COLORS: Record<PerformanceGrade, string> = {
-  A: "bg-emerald-50 border-emerald-300",
-  B: "bg-green-50 border-green-300",
-  C: "bg-amber-50 border-amber-300",
-  D: "bg-red-50 border-red-300",
+  A: "bg-transparent border-emerald-500/40",
+  B: "bg-transparent border-green-500/40",
+  C: "bg-transparent border-amber-500/40",
+  D: "bg-transparent border-red-500/40",
 };
 
 export const GRADE_LABELS: Record<PerformanceGrade, string> = {

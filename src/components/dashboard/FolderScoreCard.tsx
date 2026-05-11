@@ -12,7 +12,6 @@ import { cn } from "@/lib/utils";
 interface FolderScoreCardProps {
   folder: FolderReport;
   isPrint?: boolean;
-  totalFolders?: number;
 }
 
 function overallScore(avg: FolderReport["averageScore"]): number {
@@ -21,18 +20,16 @@ function overallScore(avg: FolderReport["averageScore"]): number {
   );
 }
 
-export function FolderScoreCard({ folder, isPrint, totalFolders = 1 }: FolderScoreCardProps) {
+export function FolderScoreCard({ folder, isPrint }: FolderScoreCardProps) {
   const overall = overallScore(folder.averageScore);
   const isRoot = folder.folder === "/";
-  // Use Globe when this is the homepage, or when there's only one folder (single-page site)
-  const useGlobe = isRoot || totalFolders === 1;
 
   return (
     <Card className={cn("overflow-hidden", isPrint && "break-inside-avoid")}>
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-center gap-2 min-w-0">
-            {useGlobe ? (
+            {isRoot ? (
               <Globe className="h-4 w-4 text-muted-foreground shrink-0" />
             ) : (
               <FolderOpen className="h-4 w-4 text-muted-foreground shrink-0" />
@@ -57,12 +54,12 @@ export function FolderScoreCard({ folder, isPrint, totalFolders = 1 }: FolderSco
 
       <CardContent className="space-y-3">
         {folder.allFailed ? (
-          <div className="flex items-start gap-2 rounded-lg bg-red-50 border border-red-200 p-3 text-sm text-red-700">
+          <div className="flex items-start gap-2 rounded-lg bg-red-500/10 border border-red-500/25 p-3 text-sm text-red-400">
             <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
             <div className="space-y-1">
               <p className="font-medium">PSI analysis failed for all pages in this section</p>
               {folder.scores[0]?.error && (
-                <p className="text-xs text-red-600 font-mono break-all">{folder.scores[0].error}</p>
+                <p className="text-xs text-red-400/70 font-mono break-all">{folder.scores[0].error}</p>
               )}
             </div>
           </div>
