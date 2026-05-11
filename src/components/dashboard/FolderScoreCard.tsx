@@ -12,6 +12,7 @@ import { cn } from "@/lib/utils";
 interface FolderScoreCardProps {
   folder: FolderReport;
   isPrint?: boolean;
+  totalFolders?: number;
 }
 
 function overallScore(avg: FolderReport["averageScore"]): number {
@@ -20,16 +21,18 @@ function overallScore(avg: FolderReport["averageScore"]): number {
   );
 }
 
-export function FolderScoreCard({ folder, isPrint }: FolderScoreCardProps) {
+export function FolderScoreCard({ folder, isPrint, totalFolders = 1 }: FolderScoreCardProps) {
   const overall = overallScore(folder.averageScore);
   const isRoot = folder.folder === "/";
+  // Use Globe when this is the homepage, or when there's only one folder (single-page site)
+  const useGlobe = isRoot || totalFolders === 1;
 
   return (
     <Card className={cn("overflow-hidden", isPrint && "break-inside-avoid")}>
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-center gap-2 min-w-0">
-            {isRoot ? (
+            {useGlobe ? (
               <Globe className="h-4 w-4 text-muted-foreground shrink-0" />
             ) : (
               <FolderOpen className="h-4 w-4 text-muted-foreground shrink-0" />

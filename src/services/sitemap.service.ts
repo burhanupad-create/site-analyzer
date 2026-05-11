@@ -1,7 +1,7 @@
 import * as xml2js from "xml2js";
 import {
   ensureAbsoluteUrl,
-  isExcludedUrl,
+  classifyExcludedUrl,
   isSameDomain,
   normalizeUrl,
 } from "@/lib/url-utils";
@@ -183,8 +183,13 @@ export async function discoverAndCrawlSitemap(
       continue;
     }
 
-    if (isExcludedUrl(abs)) {
-      skippedReasons.push({ url: abs, reason: "excluded-path-or-extension" });
+    const exclusion = classifyExcludedUrl(abs);
+    if (exclusion.excluded) {
+      skippedReasons.push({
+        url: abs,
+        reason: exclusion.reason ?? "excluded-path-or-extension",
+        pattern: exclusion.pattern,
+      });
       continue;
     }
 

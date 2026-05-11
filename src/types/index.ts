@@ -41,6 +41,7 @@ export interface ReportMetadata {
   psiErrors: PsiPageError[];
   skippedUrls: number;
   skippedReasons: SkipReason[];
+  excludedPatternMatches: Array<{ url: string; pattern: string }>;
   strategy: PsiStrategy;
   generatedAt: string;
   durationMs: number;
@@ -60,6 +61,7 @@ export interface PsiPageError {
 export interface SkipReason {
   url: string;
   reason: string;
+  pattern?: string;
 }
 
 // ─── Folder / Page Scores ──────────────────────────────────────────────────────

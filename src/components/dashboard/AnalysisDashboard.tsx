@@ -183,7 +183,7 @@ export function AnalysisDashboard({ jobId, isPrint }: AnalysisDashboardProps) {
           <h2 className="text-lg font-semibold mb-4">Section Scores</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {report.folders.map((folder) => (
-              <FolderScoreCard key={folder.folder} folder={folder} isPrint />
+              <FolderScoreCard key={folder.folder} folder={folder} isPrint totalFolders={report.folders.length} />
             ))}
           </div>
         </div>
@@ -328,21 +328,21 @@ export function AnalysisDashboard({ jobId, isPrint }: AnalysisDashboardProps) {
           )}
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
             {report.folders.slice(0, 6).map((folder) => (
-              <FolderScoreCard key={folder.folder} folder={folder} />
+              <FolderScoreCard key={folder.folder} folder={folder} totalFolders={report.folders.length} />
             ))}
           </div>
           {report.folders.length > 6 && (
             <p className="text-sm text-muted-foreground text-center">
-              +{report.folders.length - 6} more sections — see the Sections tab
+              +{report.folders.length - 6} more pages — see the Pages tab
             </p>
           )}
         </TabsContent>
 
-        {/* All sections */}
+        {/* All pages */}
         <TabsContent value="sections" className="pt-4">
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
             {report.folders.map((folder) => (
-              <FolderScoreCard key={folder.folder} folder={folder} />
+              <FolderScoreCard key={folder.folder} folder={folder} totalFolders={report.folders.length} />
             ))}
           </div>
         </TabsContent>

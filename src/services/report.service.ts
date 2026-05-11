@@ -480,6 +480,10 @@ export async function runFullAnalysis(input: AnalysisInput): Promise<SiteReport>
       ...classifyPsiError(s.error!),
     }));
 
+  const excludedPatternMatches = skippedReasons
+    .filter((s) => s.reason === "excluded-path" && s.pattern)
+    .map((s) => ({ url: s.url, pattern: s.pattern! }));
+
   const metadata: ReportMetadata = {
     totalUrlsDiscovered: totalRaw ?? urls.length,
     totalUrlsAnalyzed: completedRequests,
@@ -488,6 +492,7 @@ export async function runFullAnalysis(input: AnalysisInput): Promise<SiteReport>
     psiErrors: psiErrors.slice(0, 20), // cap payload
     skippedUrls: skippedReasons.length,
     skippedReasons: skippedReasons.slice(0, 50),
+    excludedPatternMatches: excludedPatternMatches.slice(0, 100),
     strategy,
     generatedAt: new Date().toISOString(),
     durationMs,

@@ -1,4 +1,4 @@
-import { EXCLUDED_EXTENSIONS, EXCLUDED_FOLDERS, IMPORTANT_PATHS } from "./constants";
+import { EXCLUDED_EXTENSIONS, EXCLUDED_PATH_SEGMENTS, PROTECTED_PATHS, IMPORTANT_PATHS } from "./constants";
 
 // ─── Normalization ────────────────────────────────────────────────────────────
 
@@ -81,29 +81,63 @@ const SUSPICIOUS_PARAMS = new Set([
   "p", "page", "offset", "paged", "s", "search", "q", "query",
 ]);
 
-export function isExcludedUrl(url: string): boolean {
+export interface ExclusionResult {
+  excluded: boolean;
+  reason?: string;
+  pattern?: string;
+}
+
+/**
+ * Returns why a URL was excluded (or not). Query params and hashes are stripped
+ * before matching. Protected commercial paths are never excluded.
+ */
+export function classifyExcludedUrl(url: string): ExclusionResult {
   try {
     const parsed = new URL(url);
+    // Matching is done on the pathname only — ignore query params and hashes
     const lower = parsed.pathname.toLowerCase();
 
-    if (EXCLUDED_EXTENSIONS.some((ext) => lower.endsWith(ext))) return true;
+    // Protected paths are always kept regardless of any pattern match
+    if (PROTECTED_PATHS.some((p) => lower === p || lower.startsWith(p + "/"))) {
+      return { excluded: false };
+    }
 
-    if (
-      EXCLUDED_FOLDERS.some(
-        (folder) => lower === folder || lower.startsWith(folder + "/")
-      )
-    )
-      return true;
+    // File extension check
+    if (EXCLUDED_EXTENSIONS.some((ext) => lower.endsWith(ext))) {
+      const ext = lower.slice(lower.lastIndexOf("."));
+      return { excluded: true, reason: "excluded-extension", pattern: ext };
+    }
+
+    // Path segment check (case-insensitive, query-param-stripped)
+    for (const pattern of EXCLUDED_PATH_SEGMENTS) {
+      if (pattern.endsWith("/")) {
+        // Pagination-style: pattern can appear anywhere in the path
+        if (lower.includes(pattern)) {
+          return { excluded: true, reason: "excluded-path", pattern };
+        }
+      } else {
+        // Prefix-style: pattern must be an exact match or a path prefix
+        if (lower === pattern || lower.startsWith(pattern + "/")) {
+          return { excluded: true, reason: "excluded-path", pattern };
+        }
+      }
+    }
 
     // CMS pagination/filter params
     for (const [key] of parsed.searchParams) {
-      if (SUSPICIOUS_PARAMS.has(key.toLowerCase())) return true;
+      if (SUSPICIOUS_PARAMS.has(key.toLowerCase())) {
+        return { excluded: true, reason: "cms-param", pattern: `?${key}` };
+      }
     }
 
-    return false;
+    return { excluded: false };
   } catch {
-    return false;
+    return { excluded: false };
   }
+}
+
+export function isExcludedUrl(url: string): boolean {
+  return classifyExcludedUrl(url).excluded;
 }
 
 // ─── Domain Helpers ───────────────────────────────────────────────────────────
