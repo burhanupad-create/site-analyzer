@@ -59,7 +59,7 @@ export default function HomePage() {
 
         <UrlInputForm />
 
-        <p className="text-[10px] text-[#283b43] tracking-[0.14em] uppercase font-medium">
+        <p className="text-[10px] text-white/40 tracking-[0.14em] uppercase font-medium">
           No account required · No data stored · Results ready in 2–5 minutes
         </p>
       </section>
