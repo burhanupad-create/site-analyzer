@@ -286,6 +286,7 @@ export function AnalysisDashboard({ jobId, isPrint }: AnalysisDashboardProps) {
 
       {/* Tabs */}
       <Tabs defaultValue="overview">
+        <div className="sticky top-16 z-40 bg-background py-2 -mx-4 px-4 sm:static sm:bg-transparent sm:py-0 sm:mx-0 sm:px-0">
         <TabsList>
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="sections">
@@ -309,6 +310,7 @@ export function AnalysisDashboard({ jobId, isPrint }: AnalysisDashboardProps) {
             </span>
           </TabsTrigger>
         </TabsList>
+        </div>
 
         {/* Overview */}
         <TabsContent value="overview" className="space-y-6 pt-4">

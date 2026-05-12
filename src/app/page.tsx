@@ -66,7 +66,7 @@ export default function HomePage() {
 
       {/* ── Stats ── */}
       <section className="bg-[#0c1215]">
-        <div className="max-w-4xl mx-auto px-4 py-16 grid grid-cols-3">
+        <div className="max-w-4xl mx-auto px-4 py-16 grid grid-cols-1 sm:grid-cols-3 gap-10 sm:gap-0">
           {[
             { value: "100+", label: "Pages per scan" },
             { value: "6",    label: "Core metrics tracked" },
@@ -74,7 +74,7 @@ export default function HomePage() {
           ].map(({ value, label }, i) => (
             <div key={label} className="flex flex-col items-center gap-2 px-6 relative">
               {i > 0 && (
-                <div className="absolute left-0 top-1/2 -translate-y-1/2 h-12 w-px bg-[#abe5b1]/10" />
+                <div className="hidden sm:block absolute left-0 top-1/2 -translate-y-1/2 h-12 w-px bg-[#abe5b1]/10" />
               )}
               <span className="text-6xl sm:text-7xl font-medium text-[#abe5b1] leading-none tracking-tight">
                 {value}

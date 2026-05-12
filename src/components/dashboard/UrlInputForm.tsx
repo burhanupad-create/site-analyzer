@@ -50,7 +50,7 @@ export function UrlInputForm() {
   return (
     <form onSubmit={handleSubmit} className="w-full max-w-2xl space-y-4">
       {/* URL input row */}
-      <div className="flex gap-2">
+      <div className="flex flex-col sm:flex-row gap-2">
         <div className="relative flex-1">
           <Globe className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <input
@@ -68,7 +68,7 @@ export function UrlInputForm() {
             autoFocus
           />
         </div>
-        <Button type="submit" disabled={loading || !url.trim()} size="lg">
+        <Button type="submit" disabled={loading || !url.trim()} size="lg" className="w-full sm:w-auto">
           {loading ? (
             <>
               <Loader2 className="h-4 w-4 mr-2 animate-spin" />
