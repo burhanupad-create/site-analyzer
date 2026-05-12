@@ -61,7 +61,7 @@ export function UrlInputForm() {
             className={cn(
               "w-full pl-10 pr-4 py-3 rounded-lg border bg-background text-sm",
               "focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary",
-              "placeholder:text-muted-foreground transition-colors",
+              "placeholder:text-muted-foreground/50 transition-colors",
               error && "border-red-400 focus:ring-red-300"
             )}
             disabled={loading}
